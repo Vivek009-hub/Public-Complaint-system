@@ -84,7 +84,14 @@ const complaintSchema = new mongoose.Schema(
       default:null
     },
     resolvedAt:{
-      
+      type:Date,
+      default: null
+    },
+    resolutionProof:{
+      type:String,
+    },
+    resolutionNote:{
+      type:String
     }
   },
   { timestamps: true }
