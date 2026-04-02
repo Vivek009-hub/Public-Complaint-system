@@ -1,5 +1,7 @@
 import Complaint from "../models/Complaint.model.js";
 import { calculateSeverity } from "../services/severity.service.js";
+import { createNotification } from "../services/notification.service.js";
+
 
 
 export const createComplaint = async (req, res) => {
@@ -38,6 +40,12 @@ export const createComplaint = async (req, res) => {
 
             await duplicate.save();   // here duplicate is not model , here model is reffered to a individual complaint
 
+            await createNotification(
+                req.user._id,
+                "You supported an existing complaint",
+                "complaint"
+            );
+
             return res.json({
                 message: "Duplicate complaint found , supported existed one",
                 complaint: duplicate
@@ -60,6 +68,14 @@ export const createComplaint = async (req, res) => {
         // severity score 
         complaint.severityScore = calculateSeverity(complaint);
         await complaint.save();
+
+        // 🔔 ADD THIS HERE
+        await createNotification(
+            req.user._id,
+            "Your complaint has been submitted",
+            "complaint"
+        );
+
         res.status(201).json({
             message: "Complaint created",
             complaint
@@ -116,6 +132,12 @@ export const voteComplaint = async (req, res) => {
         complaint.votes.push(userId);
 
         await complaint.save();
+
+        await createNotification(
+            userId,
+            "You supported a complaint",
+            "complaint"
+        );
 
         res.json({
             message: "Complaint Supported",
