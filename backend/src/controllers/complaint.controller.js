@@ -8,6 +8,7 @@ export const createComplaint = async (req, res) => {
     try {
         const { title, description, category, lat, lng, address } = req.body;
 
+        const imageUrls = req.files?.map(file => file.path) || [];
         // FIND NEARBY COMPLAINTS
         const nearbyComplaints = await Complaint.find({
             category,
@@ -57,6 +58,7 @@ export const createComplaint = async (req, res) => {
             title,
             description,
             category,
+            images: imageUrls, // 📸 ADD THIS LINE
             location: {
                 type: "Point",
                 coordinates: [lng, lat],
@@ -147,3 +149,24 @@ export const voteComplaint = async (req, res) => {
         res.status(500).json({ message: "voteComplaint Error " })
     }
 }
+
+// 🗺️ HEATMAP DATA
+export const getHeatmapData = async (req, res) => {
+    try {
+        const data = await Complaint.aggregate([
+            {
+                $match: { status: { $ne: "Resolved" } }
+            },
+            {
+                $group: {
+                    _id: "$location.coordinates",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
